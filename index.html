@@ -225,8 +225,8 @@ to accomplish this. See the section below for more detail on that.
 						// Remove any quotes or dashes from the functionName
 						const itemName = functionName.replace(/^– ?"/, '').replace(/"$/, '').trim();
 						
-						// Call our payment server
-						const response = await fetch('https://cokebear.jonathanfranco9.repl.co/api/createInvoiceLink', {
+						// Call our payment server with the correct URL
+						const response = await fetch('https://cokebear-JonathanFranco9.replit.app/api/createInvoiceLink', {
 							method: 'POST',
 							headers: {
 								'Content-Type': 'application/json'
