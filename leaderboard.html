@@ -16,104 +16,79 @@
         body {
             background-color: #f4f0e4;
             font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
-            padding: 20px;
+            padding: 10px;
             display: flex;
             flex-direction: column;
             align-items: center;
             min-height: 100vh;
             margin: 0;
+            font-size: 14px;
         }
 
         .container {
-            max-width: 800px;
             width: 100%;
+            max-width: 400px;
             margin: 0 auto;
+            padding: 0 10px;
         }
 
         .leaderboard {
             width: 100%;
             border-collapse: collapse;
             background-color: white;
-            box-shadow: 0 0 20px rgba(0, 0, 0, 0.1);
-            border: 4px solid #232323;
-            margin-bottom: 20px;
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+            border: 2px solid #232323;
+            table-layout: fixed;
         }
 
         .leaderboard th {
             background-color: #d02020;
             color: white;
-            padding: 15px;
-            text-align: left;
-            font-size: 1.2em;
-            border: 2px solid #232323;
+            padding: 8px 4px;
+            text-align: center;
+            border: 1px solid #232323;
+            font-size: 0.9em;
         }
 
         .leaderboard td {
-            padding: 12px 15px;
-            border: 2px solid #232323;
-            font-size: 1.1em;
-        }
-
-        .leaderboard tr:nth-child(even) {
-            background-color: #f8f6f0;
-        }
-
-        .rank {
-            font-weight: bold;
-            font-size: 1.3em;
-        }
-
-        .trend-arrow {
-            display: inline-block;
-            margin-left: 10px;
-            animation: glow 1.5s ease-in-out infinite;
-        }
-
-        .trend-up {
-            color: #2ecc71;
-        }
-
-        .trend-down {
-            color: #e74c3c;
-        }
-
-        @keyframes glow {
-            0% { filter: drop-shadow(0 0 2px currentColor); }
-            50% { filter: drop-shadow(0 0 8px currentColor); }
-            100% { filter: drop-shadow(0 0 2px currentColor); }
-        }
-
-        .current-worth {
-            display: flex;
-            align-items: center;
-        }
-
-        .current-user {
-            background-color: rgba(208, 32, 32, 0.1) !important;
-        }
-
-        .loading {
+            padding: 6px 4px;
+            border: 1px solid #232323;
             text-align: center;
-            padding: 20px;
-            font-size: 1.2em;
-            color: #666;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+
+        /* Column widths */
+        .leaderboard th:nth-child(1),
+        .leaderboard td:nth-child(1) {
+            width: 40px;
+        }
+
+        .leaderboard th:nth-child(2),
+        .leaderboard td:nth-child(2) {
+            width: 120px;
+            text-align: left;
+        }
+
+        .leaderboard th:nth-child(3),
+        .leaderboard td:nth-child(3),
+        .leaderboard th:nth-child(4),
+        .leaderboard td:nth-child(4) {
+            width: 80px;
         }
 
         .back-button {
             background-color: #d02020;
             color: white;
             border: none;
-            padding: 10px 20px;
-            font-size: 1.1em;
+            padding: 8px 16px;
+            font-size: 1em;
             font-family: inherit;
             cursor: pointer;
             border-radius: 5px;
-            margin-bottom: 20px;
-            transition: background-color 0.3s;
-        }
-
-        .back-button:hover {
-            background-color: #b01010;
+            margin-bottom: 10px;
+            width: 100%;
         }
     </style>
 </head>
@@ -123,10 +98,10 @@
         <table class="leaderboard">
             <thead>
                 <tr>
-                    <th>Rank</th>
-                    <th>Player Name</th>
-                    <th>Current Net Worth</th>
-                    <th>Highest</th>
+                    <th>#</th>
+                    <th>Player</th>
+                    <th>Current</th>
+                    <th>Best</th>
                 </tr>
             </thead>
             <tbody id="leaderboardBody">
@@ -191,6 +166,7 @@
                 
                 // Player name column
                 const nameCell = document.createElement('td');
+                nameCell.className = 'player-name';
                 nameCell.textContent = player.username.replace(/^"(.*)"$/, '$1'); // Remove quotes if present
                 
                 // Calculate trend
@@ -200,7 +176,7 @@
                 
                 // Current net worth column with trend arrow
                 const worthCell = document.createElement('td');
-                worthCell.className = 'current-worth';
+                worthCell.className = 'worth';
                 worthCell.innerHTML = `$${player.currentWorth.toLocaleString()}
                     <span class="trend-arrow ${trend >= 0 ? 'trend-up' : 'trend-down'}">
                         ${trend >= 0 ? '↑' : '↓'}
@@ -208,6 +184,7 @@
                 
                 // Highest score column
                 const highestCell = document.createElement('td');
+                highestCell.className = 'worth';
                 highestCell.textContent = `$${player.highestWorth.toLocaleString()}`;
                 
                 row.appendChild(rankCell);
