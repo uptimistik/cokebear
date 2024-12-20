@@ -1,0 +1,70 @@
+1|const express = require("express");
+2|const TelegramBot = require("node-telegram-bot-api");
+3|const cors = require("cors");
+4|const app = express();
+5|const port = 3000;
+6|require("dotenv").config();
+7|
+8|// Debug logs
+9|console.log('Environment variables:', process.env);
+10|console.log('Bot token:', process.env.TELEGRAM_BOT_TOKEN);
+11|
+12|if (!process.env.TELEGRAM_BOT_TOKEN) {
+13|    throw new Error('TELEGRAM_BOT_TOKEN is not set in environment variables');
+14|}
+15|
+16|const bot = new TelegramBot(process.env.TELEGRAM_BOT_TOKEN, {
+17|    polling: true
+18|});
+19|
+20|app.use(express.json());
+21|app.use(cors());
+22|
+23|// Handle pre-checkout queries
+24|bot.on("pre_checkout_query", (query) => {
+25|  bot.answerPreCheckoutQuery(query.id, true).catch(() => {
+26|    console.error("answerPreCheckoutQuery failed");
+27|  });
+28|});
+29|
+30|// Handle successful payments
+31|bot.on("message", (msg) => {
+32|  if (msg.successful_payment) {
+33|    const userId = msg.from.id;
+34|    console.log('Payment successful for user:', userId);
+35|  }
+36|});
+37|
+38|app.post("/api/createInvoiceLink", async (req, res) => {
+39|  const { itemName } = req.body;
+40|
+41|  if (!itemName) {
+42|    return res.status(400).json({ success: false, error: "Missing item name" });
+43|  }
+44|
+45|  try {
+46|    const title = itemName;
+47|    const description = `Purchase ${itemName}`;
+48|    const payload = `purchase_${Date.now()}`; // Unique identifier for the purchase
+49|    const currency = "XTR";  // XTR is used for Stars
+50|    
+51|    // Create the invoice link using the Telegram Bot API
+52|    const invoiceLink = await bot.createInvoiceLink(
+53|      title,
+54|      description,
+55|      payload,
+56|      process.env.TELEGRAM_BOT_TOKEN,  // Using the correct environment variable name
+57|      currency,
+58|      [{ label: itemName, amount: 100 }]  // 100 = 1 Star
+59|    );
+60|
+61|    res.json({ success: true, invoiceLink });
+62|  } catch (error) {
+63|    console.error("Error creating invoice link:", error);
+64|    res.status(500).json({ success: false, error: error.message });
+65|  }
+66|});
+67|
+68|app.listen(port, () => {
+69|  console.log(`Server running at port ${port}`);
+70|}); 

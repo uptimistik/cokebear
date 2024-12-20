@@ -216,7 +216,7 @@ to accomplish this. See the section below for more detail on that.
 				onTweetSheet: async (functionName, params) => {
 					console.log('📱 Tweet Sheet received:', { functionName, params });
 					try {
-						if (!window.Telegram?.WebApp?.requestStars) {
+						if (!window.Telegram?.WebApp?.openInvoice) {
 							console.error('❌ Stars API not available');
 							engine.postEvent('externalWriteGameAttribute', null, 'game.attributes.id148562', 'failed');
 							return;
@@ -225,22 +225,38 @@ to accomplish this. See the section below for more detail on that.
 						// Remove any quotes or dashes from the functionName
 						const itemName = functionName.replace(/^– ?"/, '').replace(/"$/, '').trim();
 						
-						const result = await window.Telegram.WebApp.requestStars({
-							stars: 1,
-							title: itemName,
-							description: `Purchase ${itemName} for 1 Star`
+						// Call our payment server
+						const response = await fetch('https://cokebear.jonathanfranco9.repl.co/api/createInvoiceLink', {
+							method: 'POST',
+							headers: {
+								'Content-Type': 'application/json'
+							},
+							body: JSON.stringify({ itemName })
 						});
 
-						if (result === true) {
-							console.log('✅ Purchase successful!');
-							// Tell GameSalad the purchase was successful
-							engine.postEvent('externalWriteGameAttribute', null, 'game.attributes.id148562', 'success');
+						const data = await response.json();
+						
+						if (data.success) {
+							// Open the payment link
+							window.Telegram.WebApp.openInvoice(data.invoiceLink)
+								.then((status) => {
+									if (status === 'paid') {
+										console.log('✅ Purchase successful!');
+										engine.postEvent('externalWriteGameAttribute', null, 'game.attributes.id148562', 'success');
+									} else {
+										console.log('❌ Purchase cancelled');
+										engine.postEvent('externalWriteGameAttribute', null, 'game.attributes.id148562', 'cancelled');
+									}
+								})
+								.catch((error) => {
+									console.error('❌ Payment error:', error);
+									engine.postEvent('externalWriteGameAttribute', null, 'game.attributes.id148562', 'error');
+								});
 						} else {
-							console.log('❌ Purchase failed or cancelled');
-							engine.postEvent('externalWriteGameAttribute', null, 'game.attributes.id148562', 'cancelled');
+							throw new Error('Failed to create invoice');
 						}
 					} catch (error) {
-						console.error('❌ Error during purchase:', error);
+						console.error('❌ Error:', error);
 						engine.postEvent('externalWriteGameAttribute', null, 'game.attributes.id148562', 'error');
 					}
 				},
