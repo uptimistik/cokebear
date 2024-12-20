@@ -222,8 +222,13 @@ to accomplish this. See the section below for more detail on that.
 							return;
 						}
 
+						// Remove any quotes or dashes from the functionName
+						const itemName = functionName.replace(/^– ?"/, '').replace(/"$/, '').trim();
+						
 						const result = await window.Telegram.WebApp.requestStars({
-							stars: 1
+							stars: 1,
+							title: itemName,
+							description: `Purchase ${itemName} for 1 Star`
 						});
 
 						if (result === true) {
