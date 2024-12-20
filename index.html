@@ -226,7 +226,7 @@ to accomplish this. See the section below for more detail on that.
 							// Remove any quotes or dashes from the functionName
 							const itemName = functionName.replace(/^– ?"/, '').replace(/"$/, '').trim();
 
-							// Call our server to get the invoice
+							// Call our server to get the invoice link
 							const response = await fetch('https://cokebear-JonathanFranco9.replit.app/api/createInvoiceLink', {
 								method: 'POST',
 								headers: {
@@ -239,12 +239,21 @@ to accomplish this. See the section below for more detail on that.
 							console.log('🔍 Server response:', data);
 							
 							if (data.success) {
-								console.log('💰 Opening payment link:', data.invoiceLink);
-								window.Telegram.WebApp.openTelegramLink(data.invoiceLink);
-								console.log('✅ Payment link opened successfully');
-								engine.postEvent('externalWriteGameAttribute', null, 'game.attributes.id148562', 'success');
+								console.log('💰 Opening invoice:', data.invoiceLink);
+								
+								// Open the invoice and handle the result
+								window.Telegram.WebApp.openInvoice(data.invoiceLink, (status) => {
+									console.log('📱 Invoice status:', status);
+									if (status === 'paid') {
+										console.log('✅ Payment successful!');
+										engine.postEvent('externalWriteGameAttribute', null, 'game.attributes.id148562', 'success');
+									} else {
+										console.log('❌ Payment not completed:', status);
+										engine.postEvent('externalWriteGameAttribute', null, 'game.attributes.id148562', status);
+									}
+								});
 							} else {
-								throw new Error(data.error || 'Failed to create payment link');
+								throw new Error(data.error || 'Failed to create invoice');
 							}
 						} catch (error) {
 							console.error('❌ Payment error:', error);
