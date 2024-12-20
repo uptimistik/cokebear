@@ -55,6 +55,29 @@ styling. Or you can modify the JavaScript code to make a different experience.
 -->
 <link rel="stylesheet" type="text/css" href="css/gse-style.css" />
 <link rel="stylesheet" type="text/css" href="css/gse-style-loading.css" />
+
+<!-- Firebase App (the core Firebase SDK) -->
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
+<!-- Firebase Database -->
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-database-compat.js"></script>
+<!-- Telegram Init -->
+<script src="https://telegram.org/js/telegram-web-app.js"></script>
+
+<script>
+    // Initialize Firebase
+    const firebaseConfig = {
+        apiKey: "AIzaSyB7Ie5mOebur7vyr05BvK9oa9Lxiy045Vo",
+        authDomain: "cokebear-ea5c0.firebaseapp.com",
+        databaseURL: "https://cokebear-ea5c0-default-rtdb.firebaseio.com",
+        projectId: "cokebear-ea5c0",
+        storageBucket: "cokebear-ea5c0.firebasestorage.app",
+        messagingSenderId: "160644307001",
+        appId: "1:160644307001:web:7e0efd9e8f5f2e6c6395e8",
+        measurementId: "G-8ZFV49CENE"
+    };
+    firebase.initializeApp(firebaseConfig);
+</script>
+
 <style type="text/css">
 
 body {
@@ -173,7 +196,9 @@ to accomplish this. See the section below for more detail on that.
 			// animation to match (say, make it bounce instead of spin).
 			// Or, you can replace this entirely with your own JavaScript code.
 			var loadingElement = document.getElementById('gse-loading');
-			var playerDelegate = {
+
+			// Create delegate handlers
+			const playerDelegate = {
 				onLoadingBegin: function() {
 					engine.showOverlay();
 					loadingElement.style.visibility = 'visible';
@@ -186,6 +211,33 @@ to accomplish this. See the section below for more detail on that.
 
 				onWindowResize: function() {
 					engine.relayout();
+				},
+
+				onGameCenterPostScore: (score, identifier) => {
+					console.log(`📊 Posting score: ${score} for identifier: ${identifier}`);
+					// Only process if the identifier is 'leaderboard'
+					if (identifier === 'leaderboard') {
+						const tg = window.Telegram.WebApp;
+						const currentUser = tg.initDataUnsafe?.user?.username;
+						if (currentUser) {
+							// Update Firebase with the new player data
+							const db = firebase.database();
+							const userRef = db.ref(`leaderboard/${currentUser}`);
+							userRef.transaction((currentData) => {
+								return {
+									username: currentUser,
+									currentWorth: score,
+									highestWorth: currentData ? Math.max(currentData.highestWorth || 0, score) : score,
+									timestamp: firebase.database.ServerValue.TIMESTAMP
+								};
+							});
+						}
+					}
+				},
+
+				onGameCenterShowLeaderboard: () => {
+					console.log('📊 Show leaderboard request');
+					window.location.href = 'leaderboard.html';
 				}
 			};
 			engine.appendDelegate(playerDelegate);

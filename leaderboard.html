@@ -1,0 +1,241 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Monopoly Leaderboard</title>
+    
+    <!-- Firebase App (the core Firebase SDK) -->
+    <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
+    <!-- Firebase Database -->
+    <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-database-compat.js"></script>
+    <!-- Telegram Init -->
+    <script src="https://telegram.org/js/telegram-web-app.js"></script>
+    
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Kabel:wght@700&display=swap');
+
+        body {
+            background-color: #f4f0e4;
+            font-family: 'Kabel', sans-serif;
+            padding: 20px;
+        }
+
+        .leaderboard {
+            width: 100%;
+            border-collapse: collapse;
+            background-color: white;
+            box-shadow: 0 0 20px rgba(0, 0, 0, 0.1);
+            border: 4px solid #232323;
+        }
+
+        .leaderboard th {
+            background-color: #d02020;
+            color: white;
+            padding: 15px;
+            text-align: left;
+            font-size: 1.2em;
+            border: 2px solid #232323;
+        }
+
+        .leaderboard td {
+            padding: 12px 15px;
+            border: 2px solid #232323;
+            font-size: 1.1em;
+        }
+
+        .leaderboard tr:nth-child(even) {
+            background-color: #f8f6f0;
+        }
+
+        .rank {
+            font-weight: bold;
+            font-size: 1.3em;
+        }
+
+        .trend-arrow {
+            display: inline-block;
+            margin-left: 10px;
+            animation: glow 1.5s ease-in-out infinite;
+        }
+
+        .trend-up {
+            color: #2ecc71;
+        }
+
+        .trend-down {
+            color: #e74c3c;
+        }
+
+        @keyframes glow {
+            0% { filter: drop-shadow(0 0 2px currentColor); }
+            50% { filter: drop-shadow(0 0 8px currentColor); }
+            100% { filter: drop-shadow(0 0 2px currentColor); }
+        }
+
+        .current-worth {
+            display: flex;
+            align-items: center;
+        }
+
+        .current-user {
+            background-color: rgba(208, 32, 32, 0.1) !important;
+        }
+
+        .loading {
+            text-align: center;
+            padding: 20px;
+            font-size: 1.2em;
+            color: #666;
+        }
+    </style>
+</head>
+<body>
+    <table class="leaderboard">
+        <thead>
+            <tr>
+                <th>Rank</th>
+                <th>Player Name</th>
+                <th>Current Net Worth</th>
+                <th>Highest</th>
+            </tr>
+        </thead>
+        <tbody id="leaderboardBody">
+            <tr>
+                <td colspan="4" class="loading">Loading leaderboard...</td>
+            </tr>
+        </tbody>
+    </table>
+
+    <script>
+        // Initialize Firebase with your config
+        const firebaseConfig = {
+            apiKey: "AIzaSyB7Ie5mOebur7vyr05BvK9oa9Lxiy045Vo",
+            authDomain: "cokebear-ea5c0.firebaseapp.com",
+            databaseURL: "https://cokebear-ea5c0-default-rtdb.firebaseio.com",
+            projectId: "cokebear-ea5c0",
+            storageBucket: "cokebear-ea5c0.firebasestorage.app",
+            messagingSenderId: "160644307001",
+            appId: "1:160644307001:web:7e0efd9e8f5f2e6c6395e8",
+            measurementId: "G-8ZFV49CENE"
+        };
+        
+        firebase.initializeApp(firebaseConfig);
+        const db = firebase.database();
+        
+        // Get Telegram WebApp user
+        const tg = window.Telegram.WebApp;
+        const currentUser = tg.initDataUnsafe?.user?.username || null;
+        
+        // Keep track of previous values for trend arrows
+        const previousValues = new Map();
+        
+        // Initialize GameSalad Engine when it's ready
+        if (typeof gse !== 'undefined') {
+            gse.ready((engine) => {
+                console.log('🎮 GameSalad Engine Ready!');
+                
+                // Create delegate handlers
+                const playerDelegate = {
+                    onGameCenterPostScore: (score, identifier) => {
+                        console.log(`📊 Posting score: ${score}`);
+                        if (currentUser) {
+                            // Update Firebase with the new player data
+                            const userRef = db.ref(`leaderboard/${currentUser}`);
+                            userRef.transaction((currentData) => {
+                                return {
+                                    username: currentUser,
+                                    currentWorth: score,
+                                    highestWorth: currentData ? Math.max(currentData.highestWorth || 0, score) : score,
+                                    timestamp: firebase.database.ServerValue.TIMESTAMP
+                                };
+                            });
+                        }
+                    },
+                    onGameCenterShowLeaderboard: () => {
+                        console.log('📊 Show leaderboard request');
+                        // The leaderboard is already visible, so we don't need to do anything
+                    }
+                };
+
+                // Add delegate to engine
+                engine.appendDelegate(playerDelegate);
+            });
+        }
+        
+        // Function to update the leaderboard
+        function updateLeaderboard(players) {
+            const leaderboardBody = document.getElementById('leaderboardBody');
+            leaderboardBody.innerHTML = '';
+
+            players.forEach((player, index) => {
+                const row = document.createElement('tr');
+                if (player.username === currentUser) {
+                    row.classList.add('current-user');
+                }
+                
+                // Rank column
+                const rankCell = document.createElement('td');
+                rankCell.className = 'rank';
+                rankCell.textContent = index + 1;
+                
+                // Player name column
+                const nameCell = document.createElement('td');
+                nameCell.textContent = player.username;
+                
+                // Calculate trend
+                const previousWorth = previousValues.get(player.username) || player.currentWorth;
+                const trend = player.currentWorth - previousWorth;
+                previousValues.set(player.username, player.currentWorth);
+                
+                // Current net worth column with trend arrow
+                const worthCell = document.createElement('td');
+                worthCell.className = 'current-worth';
+                worthCell.innerHTML = `$${player.currentWorth.toLocaleString()}
+                    <span class="trend-arrow ${trend >= 0 ? 'trend-up' : 'trend-down'}">
+                        ${trend >= 0 ? '↑' : '↓'}
+                    </span>`;
+                
+                // Highest score column
+                const highestCell = document.createElement('td');
+                highestCell.textContent = `$${player.highestWorth.toLocaleString()}`;
+                
+                row.appendChild(rankCell);
+                row.appendChild(nameCell);
+                row.appendChild(worthCell);
+                row.appendChild(highestCell);
+                leaderboardBody.appendChild(row);
+            });
+        }
+
+        // Function to handle GameSalad delegate data
+        window.handleGameSaladData = function(playerData) {
+            // Update Firebase with the new player data
+            const userRef = db.ref(`leaderboard/${playerData.username}`);
+            userRef.transaction((currentData) => {
+                return {
+                    username: playerData.username,
+                    currentWorth: playerData.currentWorth,
+                    highestWorth: currentData ? Math.max(currentData.highestWorth || 0, playerData.currentWorth) : playerData.currentWorth,
+                    timestamp: firebase.database.ServerValue.TIMESTAMP
+                };
+            });
+        };
+
+        // Listen for leaderboard updates
+        const leaderboardRef = db.ref('leaderboard');
+        leaderboardRef.on('value', (snapshot) => {
+            const players = [];
+            snapshot.forEach((childSnapshot) => {
+                players.push(childSnapshot.val());
+            });
+            
+            // Sort players by current worth
+            players.sort((a, b) => b.currentWorth - a.currentWorth);
+            
+            // Update the leaderboard display
+            updateLeaderboard(players);
+        });
+    </script>
+</body>
+</html> 
