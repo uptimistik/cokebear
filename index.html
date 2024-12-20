@@ -213,6 +213,33 @@ to accomplish this. See the section below for more detail on that.
 					engine.relayout();
 				},
 
+				onTweetSheet: async (functionName, params) => {
+					console.log('📱 Tweet Sheet received:', { functionName, params });
+					try {
+						if (!window.Telegram?.WebApp?.requestStars) {
+							console.error('❌ Stars API not available');
+							engine.postEvent('externalWriteGameAttribute', null, 'game.attributes.id148562', 'failed');
+							return;
+						}
+
+						const result = await window.Telegram.WebApp.requestStars({
+							stars: 1
+						});
+
+						if (result === true) {
+							console.log('✅ Purchase successful!');
+							// Tell GameSalad the purchase was successful
+							engine.postEvent('externalWriteGameAttribute', null, 'game.attributes.id148562', 'success');
+						} else {
+							console.log('❌ Purchase failed or cancelled');
+							engine.postEvent('externalWriteGameAttribute', null, 'game.attributes.id148562', 'cancelled');
+						}
+					} catch (error) {
+						console.error('❌ Error during purchase:', error);
+						engine.postEvent('externalWriteGameAttribute', null, 'game.attributes.id148562', 'error');
+					}
+				},
+
 				onGameCenterPostScore: (score, identifier) => {
 					console.log(`📊 Posting score: ${score} for identifier: ${identifier}`);
 					// Only process if the identifier is 'leaderboard'
