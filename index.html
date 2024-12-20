@@ -216,16 +216,28 @@ to accomplish this. See the section below for more detail on that.
 				onTweetSheet: async (functionName, params) => {
 					console.log('📱 Tweet Sheet received:', { functionName, params });
 					try {
-						if (!window.Telegram?.WebApp) {
-							console.error('❌ Telegram WebApp not available');
+						if (!window.Telegram?.WebApp?.openInvoice) {
+							console.error('❌ Stars API not available');
 							engine.postEvent('externalWriteGameAttribute', null, 'game.attributes.id148562', 'failed');
 							return;
 						}
 
+						// Register event listener for invoice closed
+						window.Telegram.WebApp.onEvent('invoiceClosed', function(event) {
+							console.log('📱 Invoice closed with status:', event.status);
+							if (event.status === 'paid') {
+								console.log('✅ Stars purchase successful!');
+								engine.postEvent('externalWriteGameAttribute', null, 'game.attributes.id148562', 'success');
+							} else {
+								console.log('❌ Stars purchase not completed:', event.status);
+								engine.postEvent('externalWriteGameAttribute', null, 'game.attributes.id148562', event.status);
+							}
+						});
+
 						// Remove any quotes or dashes from the functionName
 						const itemName = functionName.replace(/^– ?"/, '').replace(/"$/, '').trim();
 						
-						// Call our server to get the stars transfer link
+						// Call our server to get the invoice link
 						const response = await fetch('https://cokebear-JonathanFranco9.replit.app/api/createInvoiceLink', {
 							method: 'POST',
 							headers: {
@@ -238,19 +250,15 @@ to accomplish this. See the section below for more detail on that.
 						
 						if (data.success) {
 							try {
-								// Open the stars transfer link
-								console.log('⭐ Opening stars transfer:', data.invoiceLink);
-								window.Telegram.WebApp.openTelegramLink(data.invoiceLink);
-								
-								// Mark as success since we opened the link
-								console.log('✅ Stars transfer initiated');
-								engine.postEvent('externalWriteGameAttribute', null, 'game.attributes.id148562', 'success');
+								// Open the invoice
+								console.log('⭐ Opening stars invoice:', data.invoiceLink);
+								await window.Telegram.WebApp.openInvoice(data.invoiceLink);
 							} catch (error) {
-								console.log('❌ Stars transfer error:', error);
+								console.log('❌ Stars purchase error:', error);
 								engine.postEvent('externalWriteGameAttribute', null, 'game.attributes.id148562', 'error');
 							}
 						} else {
-							throw new Error('Failed to create stars transfer');
+							throw new Error('Failed to create stars invoice');
 						}
 					} catch (error) {
 						console.error('❌ Error:', error);
