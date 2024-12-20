@@ -152,6 +152,7 @@
             measurementId: "G-8ZFV49CENE"
         };
         
+        // Initialize Firebase
         firebase.initializeApp(firebaseConfig);
         const db = firebase.database();
         
@@ -162,43 +163,22 @@
         // Keep track of previous values for trend arrows
         const previousValues = new Map();
         
-        // Initialize GameSalad Engine when it's ready
-        if (typeof gse !== 'undefined') {
-            gse.ready((engine) => {
-                console.log('🎮 GameSalad Engine Ready!');
-                
-                // Create delegate handlers
-                const playerDelegate = {
-                    onGameCenterPostScore: (score, identifier) => {
-                        console.log(`📊 Posting score: ${score}`);
-                        if (currentUser) {
-                            // Update Firebase with the new player data
-                            const userRef = db.ref(`leaderboard/${currentUser}`);
-                            userRef.transaction((currentData) => {
-                                return {
-                                    username: currentUser,
-                                    currentWorth: score,
-                                    highestWorth: currentData ? Math.max(currentData.highestWorth || 0, score) : score,
-                                    timestamp: firebase.database.ServerValue.TIMESTAMP
-                                };
-                            });
-                        }
-                    },
-                    onGameCenterShowLeaderboard: () => {
-                        console.log('📊 Show leaderboard request');
-                        // The leaderboard is already visible, so we don't need to do anything
-                    }
-                };
-
-                // Add delegate to engine
-                engine.appendDelegate(playerDelegate);
-            });
-        }
-        
         // Function to update the leaderboard
         function updateLeaderboard(players) {
+            console.log('📊 Updating leaderboard with players:', players);
             const leaderboardBody = document.getElementById('leaderboardBody');
             leaderboardBody.innerHTML = '';
+
+            if (!players || players.length === 0) {
+                const row = document.createElement('tr');
+                const cell = document.createElement('td');
+                cell.colSpan = 4;
+                cell.className = 'loading';
+                cell.textContent = 'No scores yet...';
+                row.appendChild(cell);
+                leaderboardBody.appendChild(row);
+                return;
+            }
 
             players.forEach((player, index) => {
                 const row = document.createElement('tr');
@@ -213,7 +193,7 @@
                 
                 // Player name column
                 const nameCell = document.createElement('td');
-                nameCell.textContent = player.username;
+                nameCell.textContent = player.username.replace(/^"(.*)"$/, '$1'); // Remove quotes if present
                 
                 // Calculate trend
                 const previousWorth = previousValues.get(player.username) || player.currentWorth;
@@ -240,34 +220,71 @@
             });
         }
 
-        // Function to handle GameSalad delegate data
-        window.handleGameSaladData = function(playerData) {
-            // Update Firebase with the new player data
-            const userRef = db.ref(`leaderboard/${playerData.username}`);
-            userRef.transaction((currentData) => {
-                return {
-                    username: playerData.username,
-                    currentWorth: playerData.currentWorth,
-                    highestWorth: currentData ? Math.max(currentData.highestWorth || 0, playerData.currentWorth) : playerData.currentWorth,
-                    timestamp: firebase.database.ServerValue.TIMESTAMP
-                };
-            });
-        };
+        // Function to fetch and update leaderboard data
+        async function fetchLeaderboardData() {
+            console.log('🔄 Fetching leaderboard data...');
+            try {
+                const snapshot = await db.ref('leaderboard').once('value');
+                const data = snapshot.val();
+                console.log('📊 Received data:', data);
+                
+                const players = [];
+                if (data) {
+                    Object.entries(data).forEach(([key, player]) => {
+                        console.log('Processing player:', key, player);
+                        if (player && typeof player === 'object') {
+                            players.push({
+                                username: player.username || key,
+                                currentWorth: parseInt(player.currentWorth) || 0,
+                                highestWorth: parseInt(player.highestWorth) || 0
+                            });
+                        }
+                    });
+                }
+                
+                console.log('Processed players:', players);
+                
+                // Sort players by current worth
+                players.sort((a, b) => b.currentWorth - a.currentWorth);
+                
+                // Update the leaderboard display
+                updateLeaderboard(players);
+                
+                // Set up real-time listener for updates
+                db.ref('leaderboard').on('value', (snapshot) => {
+                    const updatedData = snapshot.val();
+                    console.log('🔄 Real-time update received:', updatedData);
+                    
+                    const updatedPlayers = [];
+                    if (updatedData) {
+                        Object.entries(updatedData).forEach(([key, player]) => {
+                            if (player && typeof player === 'object') {
+                                updatedPlayers.push({
+                                    username: player.username || key,
+                                    currentWorth: parseInt(player.currentWorth) || 0,
+                                    highestWorth: parseInt(player.highestWorth) || 0
+                                });
+                            }
+                        });
+                    }
+                    
+                    updatedPlayers.sort((a, b) => b.currentWorth - a.currentWorth);
+                    updateLeaderboard(updatedPlayers);
+                });
+                
+            } catch (error) {
+                console.error('❌ Error fetching leaderboard:', error);
+                const leaderboardBody = document.getElementById('leaderboardBody');
+                leaderboardBody.innerHTML = `
+                    <tr>
+                        <td colspan="4" class="loading">Error loading leaderboard: ${error.message}</td>
+                    </tr>
+                `;
+            }
+        }
 
-        // Listen for leaderboard updates
-        const leaderboardRef = db.ref('leaderboard');
-        leaderboardRef.on('value', (snapshot) => {
-            const players = [];
-            snapshot.forEach((childSnapshot) => {
-                players.push(childSnapshot.val());
-            });
-            
-            // Sort players by current worth
-            players.sort((a, b) => b.currentWorth - a.currentWorth);
-            
-            // Update the leaderboard display
-            updateLeaderboard(players);
-        });
+        // Start fetching data immediately
+        fetchLeaderboardData();
     </script>
 </body>
 </html> 
