@@ -238,10 +238,7 @@ to accomplish this. See the section below for more detail on that.
 						
 						if (data.success) {
 							try {
-								// Open the payment link and wait for response
-								const result = await window.Telegram.WebApp.openInvoice(data.invoiceLink);
-								
-								// Listen for invoice_closed event
+								// Register event listener BEFORE opening invoice
 								window.Telegram.WebApp.onEvent('invoice_closed', function(event) {
 									console.log('📱 Invoice closed with status:', event.status);
 									if (event.status === 'paid') {
@@ -252,7 +249,10 @@ to accomplish this. See the section below for more detail on that.
 										engine.postEvent('externalWriteGameAttribute', null, 'game.attributes.id148562', event.status);
 									}
 								});
-								
+
+								// Now open the invoice
+								console.log('🔗 Opening invoice link:', data.invoiceLink);
+								await window.Telegram.WebApp.openInvoice(data.invoiceLink);
 							} catch (error) {
 								console.log('❌ Purchase error:', error);
 								engine.postEvent('externalWriteGameAttribute', null, 'game.attributes.id148562', 'error');
