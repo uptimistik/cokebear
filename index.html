@@ -238,20 +238,16 @@ to accomplish this. See the section below for more detail on that.
 						
 						if (data.success) {
 							// Open the payment link
-							window.Telegram.WebApp.openInvoice(data.invoiceLink)
-								.then((status) => {
-									if (status === 'paid') {
-										console.log('✅ Purchase successful!');
-										engine.postEvent('externalWriteGameAttribute', null, 'game.attributes.id148562', 'success');
-									} else {
-										console.log('❌ Purchase cancelled');
-										engine.postEvent('externalWriteGameAttribute', null, 'game.attributes.id148562', 'cancelled');
-									}
-								})
-								.catch((error) => {
-									console.error('❌ Payment error:', error);
-									engine.postEvent('externalWriteGameAttribute', null, 'game.attributes.id148562', 'error');
-								});
+							const result = await window.Telegram.WebApp.openInvoice(data.invoiceLink);
+							console.log('Payment result:', result);
+							
+							if (result === 'paid') {
+								console.log('✅ Purchase successful!');
+								engine.postEvent('externalWriteGameAttribute', null, 'game.attributes.id148562', 'success');
+							} else {
+								console.log('❌ Purchase cancelled');
+								engine.postEvent('externalWriteGameAttribute', null, 'game.attributes.id148562', 'cancelled');
+							}
 						} else {
 							throw new Error('Failed to create invoice');
 						}
