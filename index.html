@@ -2,6 +2,7 @@
 <html>
 <head>
 <meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=0">
 <meta http-equiv="X-UA-Compatible" content="IE=edge">
 <!--
 
@@ -81,9 +82,21 @@ styling. Or you can modify the JavaScript code to make a different experience.
 <style type="text/css">
 
 body {
-	background-color: black;
+	background-color: #111;
 	margin: 0;
 	padding: 0;
+	display: flex;
+	justify-content: center;
+	align-items: center;
+	height: 100vh;
+}
+
+#gse-player {
+	width: 100%;
+	max-width: 480px;
+	height: 100%;
+	position: relative;
+	background-color: black;
 }
 
 </style>
@@ -316,7 +329,7 @@ to accomplish this. See the section below for more detail on that.
 			// viewport-fit = none | center | fill | letterbox | overscan
 			engine.setRenderFrame('gse-player');
 			engine.setOptions({
-				'viewport-reference': 'window',
+				'viewport-reference': 'frame',
 				'viewport-fit': 'overscan'
 			});
 			engine.loadOptionsFromURL();
