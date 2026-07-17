@@ -99,6 +99,242 @@ body {
 	background-color: black;
 }
 
+/* --- COKEBEAR START SCREEN STYLES --- */
+@import url('https://fonts.googleapis.com/css2?family=Londrina+Solid:wght@400;900&family=Outfit:wght@400;600;800&display=swap');
+
+#start-screen {
+	position: absolute;
+	top: 0;
+	left: 0;
+	width: 100%;
+	height: 100%;
+	background: radial-gradient(circle at 50% 30%, #1e3c72, #2a5298, #0b132b);
+	display: flex;
+	flex-direction: column;
+	justify-content: center;
+	align-items: center;
+	z-index: 9999;
+	visibility: visible;
+	pointer-events: auto;
+	transition: opacity 0.6s cubic-bezier(0.4, 0, 0.2, 1), visibility 0.6s;
+	font-family: 'Outfit', sans-serif;
+	overflow: hidden;
+}
+
+#start-screen::before {
+	content: '';
+	position: absolute;
+	top: 0;
+	left: 0;
+	width: 100%;
+	height: 100%;
+	background-image: url('game/default/images/2.png');
+	background-size: cover;
+	background-position: center;
+	opacity: 0.15;
+	mix-blend-mode: overlay;
+	pointer-events: none;
+}
+
+.snow-container {
+	position: absolute;
+	top: 0;
+	left: 0;
+	width: 100%;
+	height: 100%;
+	pointer-events: none;
+	z-index: 1;
+}
+
+.snowflake {
+	position: absolute;
+	top: -10px;
+	background: #fff;
+	border-radius: 50%;
+	pointer-events: none;
+	opacity: 0.85;
+	animation: fall linear infinite;
+}
+
+@keyframes fall {
+	0% {
+		transform: translateY(0) translateX(0) rotate(0deg);
+	}
+	100% {
+		transform: translateY(110vh) translateX(100px) rotate(360deg);
+	}
+}
+
+.start-content {
+	position: relative;
+	z-index: 2;
+	display: flex;
+	flex-direction: column;
+	align-items: center;
+	justify-content: center;
+	width: 100%;
+	height: 100%;
+	box-sizing: border-box;
+	padding: 20px;
+}
+
+.bear-container {
+	position: relative;
+	width: 180px;
+	height: 180px;
+	margin-bottom: 20px;
+	display: flex;
+	justify-content: center;
+	align-items: center;
+}
+
+.bear-container::before {
+	content: '';
+	position: absolute;
+	width: 140px;
+	height: 140px;
+	background: radial-gradient(circle, rgba(0, 242, 254, 0.4) 0%, rgba(79, 172, 254, 0) 70%);
+	border-radius: 50%;
+	animation: pulse-glow 3s infinite ease-in-out;
+	z-index: -1;
+}
+
+.bear-logo {
+	width: 100%;
+	height: 100%;
+	object-fit: contain;
+	filter: drop-shadow(0 8px 16px rgba(0, 0, 0, 0.5));
+	animation: float-bear 4s infinite ease-in-out;
+}
+
+@keyframes float-bear {
+	0%, 100% {
+		transform: translateY(0) rotate(0deg);
+	}
+	50% {
+		transform: translateY(-8px) rotate(2deg);
+	}
+}
+
+@keyframes pulse-glow {
+	0%, 100% {
+		transform: scale(0.9);
+		opacity: 0.6;
+	}
+	50% {
+		transform: scale(1.2);
+		opacity: 1;
+	}
+}
+
+.game-title {
+	font-family: 'Londrina Solid', cursive;
+	font-size: 3.5rem;
+	font-weight: 900;
+	margin: 0;
+	padding: 0;
+	color: #ffffff;
+	text-shadow: 0 0 10px rgba(0, 242, 254, 0.6), 
+	             0 0 20px rgba(0, 242, 254, 0.4), 
+	             0 4px 8px rgba(0, 0, 0, 0.5);
+	letter-spacing: 2px;
+	text-transform: uppercase;
+	background: linear-gradient(to bottom, #ffffff 40%, #a5f3fc 100%);
+	-webkit-background-clip: text;
+	-webkit-text-fill-color: transparent;
+}
+
+.game-subtitle {
+	font-size: 1rem;
+	font-weight: 600;
+	color: #e2e8f0;
+	margin-top: 5px;
+	margin-bottom: 40px;
+	text-transform: uppercase;
+	letter-spacing: 3px;
+	text-shadow: 0 2px 4px rgba(0, 0, 0, 0.4);
+}
+
+.btn-play {
+	position: relative;
+	background: linear-gradient(135deg, #00f2fe 0%, #4facfe 100%);
+	border: none;
+	border-radius: 50px;
+	padding: 18px 50px;
+	font-family: 'Outfit', sans-serif;
+	font-size: 1.5rem;
+	font-weight: 800;
+	color: #ffffff;
+	text-transform: uppercase;
+	letter-spacing: 2px;
+	cursor: pointer;
+	outline: none;
+	box-shadow: 0 8px 25px rgba(0, 242, 254, 0.4), 
+	            0 4px 10px rgba(0, 0, 0, 0.3),
+	            inset 0 2px 4px rgba(255, 255, 255, 0.4);
+	overflow: hidden;
+	transition: all 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+	pointer-events: auto;
+}
+
+.btn-play span {
+	position: relative;
+	z-index: 2;
+	text-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+}
+
+.btn-play::before {
+	content: '';
+	position: absolute;
+	top: 0;
+	left: -100%;
+	width: 100%;
+	height: 100%;
+	background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.4), transparent);
+	transition: all 0.6s ease;
+	z-index: 1;
+}
+
+.btn-play:hover {
+	transform: scale(1.05) translateY(-2px);
+	box-shadow: 0 12px 30px rgba(0, 242, 254, 0.6), 
+	            0 6px 15px rgba(0, 0, 0, 0.4),
+	            inset 0 2px 4px rgba(255, 255, 255, 0.4);
+}
+
+.btn-play:hover::before {
+	left: 100%;
+}
+
+.btn-play:active {
+	transform: scale(0.98) translateY(1px);
+	box-shadow: 0 4px 15px rgba(0, 242, 254, 0.4), 
+	            0 2px 5px rgba(0, 0, 0, 0.4);
+}
+
+.btn-glow {
+	position: absolute;
+	top: 0;
+	left: 0;
+	width: 100%;
+	height: 100%;
+	background: radial-gradient(circle, rgba(255, 255, 255, 0.8) 0%, rgba(255, 255, 255, 0) 70%);
+	opacity: 0;
+	transition: opacity 0.3s;
+	pointer-events: none;
+	z-index: 1;
+}
+
+.btn-play:hover .btn-glow {
+	opacity: 0.2;
+}
+
+.fade-out {
+	opacity: 0 !important;
+	visibility: hidden !important;
+	pointer-events: none !important;
+}
+
 </style>
 </head>
 <body>
@@ -147,6 +383,23 @@ Here are some common scenarios:
 -->
 <div id="gse-player" class="gse-frame">
 	<!-- The engine will create and insert drawing elements here. -->
+
+	<!-- Cokebear Start Screen Overlay -->
+	<div id="start-screen">
+		<div class="snow-container" id="snow-container"></div>
+		<div class="start-content">
+			<div class="bear-container">
+				<img src="game/default/images/14.png" alt="Cokebear" class="bear-logo">
+			</div>
+			<h1 class="game-title">COKE BEAR</h1>
+			<p class="game-subtitle">Ready for the challenge?</p>
+			<button id="start-button" class="btn-play">
+				<span>PLAY</span>
+				<div class="btn-glow"></div>
+			</button>
+		</div>
+	</div>
+
 	<div class="gse-overlay">
 		<div id="gse-text" class="gse-dialog">
 			<div>
@@ -354,10 +607,56 @@ to accomplish this. See the section below for more detail on that.
 			// yet. The final step is to begin loading the game.
 			// We have a few options:
 
-			// 1. Begin loading game assets immediately, from the default game
-			// location, and then start the first scene soon as it is complete.
-			// This is the simplest option with just one line.
-			engine.play();
+			// 1. Preload the game in the background while the start screen is shown.
+			engine.load('game/default');
+
+			// Generate snow particles dynamically for the start screen
+			const snowContainer = document.getElementById('snow-container');
+			if (snowContainer) {
+				const numFlakes = 35;
+				for (let i = 0; i < numFlakes; i++) {
+					const flake = document.createElement('div');
+					flake.className = 'snowflake';
+					
+					const size = Math.random() * 5 + 2; // 2px to 7px
+					const left = Math.random() * 100; // 0% to 100%
+					const duration = Math.random() * 5 + 5; // 5s to 10s
+					const delay = Math.random() * 5; // 0s to 5s
+					const opacity = Math.random() * 0.6 + 0.4; // 0.4 to 1.0
+					
+					flake.style.width = `${size}px`;
+					flake.style.height = `${size}px`;
+					flake.style.left = `${left}%`;
+					flake.style.animationDuration = `${duration}s`;
+					flake.style.animationDelay = `-${delay}s`;
+					flake.style.opacity = opacity;
+					
+					if (size < 4) {
+						flake.style.filter = 'blur(1px)';
+					}
+					
+					snowContainer.appendChild(flake);
+				}
+			}
+
+			// Handle start button click
+			const startButton = document.getElementById('start-button');
+			const startScreen = document.getElementById('start-screen');
+			
+			if (startButton && startScreen) {
+				startButton.addEventListener('click', function() {
+					// Play the game
+					engine.play();
+					
+					// Fade out the start screen
+					startScreen.classList.add('fade-out');
+					
+					// Remove the start screen from display after transition to allow clicks underneath
+					setTimeout(() => {
+						startScreen.style.display = 'none';
+					}, 600);
+				});
+			}
 
 
 			// 2. Load a game from a location other than the default. Use this
